@@ -1,36 +1,20 @@
-import React from 'react';
-import { useState } from 'react';
-import { useQuery } from 'react-query';
 import { Wrapper } from './styles/App.styles';
-
-type BitcoinData = {
-  '15m': number;
-  buy: number;
-  last: number;
-  sell: number;
-  symbol: string;
-};
-
-type Currencies = {
-  [key: string]: BitcoinData;
-};
-
-const getBCData = async (): Promise<Currencies> =>
-  await (await fetch('https://blockchain.info/ticker')).json();
+import { useAppSelector, useAppDispatch } from './reduxHooks';
+import { useGetBitcoinDataQuery } from './services/app';
+import { changeCurrency } from './features/appSlice';
 
 const INTERVAL_TIME = 30000;
 
 function App() {
-  const [currency, setCurrency] = useState('USD');
-  const { data, isLoading, error, refetch } = useQuery<Currencies>(
-    'bc-data',
-    getBCData,
-    { refetchInterval: INTERVAL_TIME }
-  );
+  const { currency } = useAppSelector((state) => state.app);
+  const dispatch = useAppDispatch();
 
-  const handleCurrencySelection = (e: any) => {
-    setCurrency(e.target.value);
-  };
+  const { data, isLoading, error } = useGetBitcoinDataQuery(undefined, {
+    pollingInterval: INTERVAL_TIME,
+  });
+
+  const handleCurrencySelection = (e: any) =>
+    dispatch(changeCurrency(e.currentTarget.value));
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Something went wrong...</div>;
